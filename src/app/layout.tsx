@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 
-const geistSans = Geist({
+const fontSans = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const fontSerif = Playfair_Display({
+  variable: "--font-serif",
+  subsets: ["latin"],
+});
+
+const fontMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -26,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-neutral-100 text-neutral-900`}
+        className={`${fontSans.variable} ${fontMono.variable} ${fontSerif.variable} antialiased min-h-screen bg-neutral-100 text-neutral-900`}
       >
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>

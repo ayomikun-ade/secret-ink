@@ -4,20 +4,21 @@ import { use, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { getFingerprint } from "@/lib/fingerprint";
+import { Loader2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Heart,
-  MessageSquare,
-  Send,
-  Clock,
-  Smile,
-  Zap,
-  Frown,
-  Loader2,
-  Share2,
-  Check,
-  ChevronLeft,
-  Sparkles,
-} from "lucide-react";
+  FavouriteIcon,
+  MessageAdd01Icon,
+  SentIcon,
+  Clock01Icon,
+  SmileIcon,
+  SurpriseIcon,
+  UnhappyIcon,
+  Share08Icon,
+  TickDouble02Icon,
+  ArrowLeft01Icon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { clsx, type ClassValue } from "clsx";
@@ -94,7 +95,13 @@ export default function BoardPage({
     return (
       <div className="max-w-md mx-auto px-4 py-24 text-center">
         <div className="bg-neutral-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-          <Heart className="w-10 h-10 text-neutral-700" />
+          <HugeiconsIcon
+            icon={FavouriteIcon}
+            size={24}
+            color="currentColor"
+            strokeWidth={2}
+            className="w-10 h-10 text-neutral-700"
+          />
         </div>
         <h1 className="text-3xl font-black text-neutral-900 mb-4">
           Space Not Found
@@ -106,14 +113,21 @@ export default function BoardPage({
           href="/"
           className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 text-white rounded-2xl font-bold shadow-lg hover:bg-neutral-900/90 transition-all gap-2"
         >
-          <ChevronLeft className="w-5 h-5" /> Return Home
+          <HugeiconsIcon
+            icon={ArrowLeft01Icon}
+            size={20}
+            color="currentColor"
+            strokeWidth={2}
+            className="w-5 h-5"
+          />{" "}
+          Return Home
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100 pb-24">
+    <div className="font-sans min-h-screen bg-neutral-100 pb-24">
       <div className="max-w-3xl mx-auto px-4 pt-12">
         <header className="mb-12">
           <Link
@@ -121,16 +135,29 @@ export default function BoardPage({
             className="group inline-flex items-center gap-2 text-neutral-900 hover:text-brand-red font-bold mb-8 transition-all"
           >
             <div className="bg-white p-1.5 rounded-lg shadow-sm group-hover:shadow-md transition-all border border-neutral-100">
-              <ChevronLeft className="w-4 h-4" />
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                size={16}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-4 h-4"
+              />
             </div>
             Back to Home
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 text-white rounded-full text-xs font-black tracking-widest uppercase">
-                <Sparkles className="w-3 h-3 text-brand-red" /> Private Board
+                <HugeiconsIcon
+                  icon={SparklesIcon}
+                  size={12}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-3 h-3 text-brand-red"
+                />{" "}
+                Private Board
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight">
+              <h1 className="text-4xl font-serif md:text-5xl font-black text-neutral-900 tracking-tight leading-tight">
                 {board.name}
               </h1>
               {board.description && (
@@ -144,9 +171,21 @@ export default function BoardPage({
               className="group relative flex items-center gap-2 px-6 py-3 bg-white text-neutral-900 rounded-2xl hover:bg-neutral-100 transition-all text-sm font-bold shadow-sm hover:shadow-md border border-neutral-100 self-start md:self-auto active:scale-95"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-green-500" />
+                <HugeiconsIcon
+                  icon={TickDouble02Icon}
+                  size={16}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-4 h-4 text-green-500"
+                />
               ) : (
-                <Share2 className="w-4 h-4" />
+                <HugeiconsIcon
+                  icon={Share08Icon}
+                  size={16}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-4 h-4"
+                />
               )}
               {copied ? "Link Copied!" : "Invite via Link"}
             </button>
@@ -157,7 +196,13 @@ export default function BoardPage({
           <div className="absolute -inset-1 bg-neutral-900/5 rounded-4xl blur opacity-25 transition duration-1000"></div>
           <div className="relative bg-white rounded-[1.8rem] shadow-xl shadow-neutral-900/5 p-8 border border-neutral-100">
             <h2 className="text-xl font-black text-neutral-900 mb-6 flex items-center gap-3">
-              <MessageSquare className="w-6 h-6 text-brand-red" />
+              <HugeiconsIcon
+                icon={MessageAdd01Icon}
+                size={24}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-6 h-6 text-brand-red"
+              />
               Cast Your Whisper
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -201,7 +246,13 @@ export default function BoardPage({
                   {isSubmitting ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <Send className="w-5 h-5" />
+                    <HugeiconsIcon
+                      icon={SentIcon}
+                      size={24}
+                      color="currentColor"
+                      strokeWidth={2}
+                      className="w-5 h-5"
+                    />
                   )}
                   Post Whisper
                 </button>
@@ -220,7 +271,7 @@ export default function BoardPage({
 
         <div className="space-y-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black text-neutral-900 flex items-center gap-3">
+            <h2 className="text-2xl font-serif font-black text-neutral-900 flex items-center gap-3">
               Whispers in the Wind
               {confessions && (
                 <span className="bg-neutral-900 text-white text-sm px-3 py-1 rounded-full font-black">
@@ -240,7 +291,13 @@ export default function BoardPage({
           ) : confessions.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-[2.5rem] border-4 border-dashed border-neutral-100">
               <div className="bg-neutral-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MessageSquare className="w-10 h-10 text-neutral-700" />
+                <HugeiconsIcon
+                  icon={MessageAdd01Icon}
+                  size={40}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-10 h-10 text-neutral-700"
+                />
               </div>
               <p className="text-neutral-900 font-black text-lg">
                 Silence is golden, but whispers are better.
@@ -285,7 +342,7 @@ function ConfessionCard({
 
   return (
     <div className="group relative bg-white p-8 rounded-4xl shadow-sm hover:shadow-xl hover:shadow-neutral-900/5 transition-all duration-500 border border-neutral-100 overflow-hidden">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex max-md:flex-col max-md:gap-2 md:items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center border border-neutral-100">
             <span className="text-neutral-900 font-black text-xs uppercase">
@@ -296,8 +353,14 @@ function ConfessionCard({
             {confession.nickname || "Anonymous"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-neutral-700 font-bold text-[10px] uppercase tracking-widest bg-neutral-100 px-3 py-1 rounded-full">
-          <Clock className="w-3 h-3" />
+        <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-neutral-700 font-bold text-[10px] uppercase tracking-widest bg-neutral-100 px-3 py-1 rounded-full">
+          <HugeiconsIcon
+            icon={Clock01Icon}
+            size={12}
+            color="currentColor"
+            strokeWidth={2}
+            className="w-3 h-3"
+          />
           {formatDistanceToNow(confession.createdAt)} ago
         </div>
       </div>
@@ -306,28 +369,60 @@ function ConfessionCard({
       </p>
       <div className="flex flex-wrap gap-3">
         <ReactionButton
-          icon={<Heart className="w-4 h-4" />}
+          icon={
+            <HugeiconsIcon
+              icon={FavouriteIcon}
+              size={16}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-4 h-4"
+            />
+          }
           count={counts?.love || 0}
           onClick={() => handleReact("love")}
           color="hover:bg-brand-red hover:text-white hover:border-brand-red text-neutral-700 border-neutral-100"
           label="Love"
         />
         <ReactionButton
-          icon={<Smile className="w-4 h-4" />}
+          icon={
+            <HugeiconsIcon
+              icon={SmileIcon}
+              size={16}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-4 h-4"
+            />
+          }
           count={counts?.laugh || 0}
           onClick={() => handleReact("laugh")}
           color="hover:bg-neutral-900 hover:text-white hover:border-neutral-900 text-neutral-700 border-neutral-100"
           label="Haha"
         />
         <ReactionButton
-          icon={<Zap className="w-4 h-4" />}
+          icon={
+            <HugeiconsIcon
+              icon={SurpriseIcon}
+              size={16}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-4 h-4"
+            />
+          }
           count={counts?.shock || 0}
           onClick={() => handleReact("shock")}
           color="hover:bg-neutral-900 hover:text-white hover:border-neutral-900 text-neutral-700 border-neutral-100"
           label="Wow"
         />
         <ReactionButton
-          icon={<Frown className="w-4 h-4" />}
+          icon={
+            <HugeiconsIcon
+              icon={UnhappyIcon}
+              size={16}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-4 h-4"
+            />
+          }
           count={counts?.sad || 0}
           onClick={() => handleReact("sad")}
           color="hover:bg-neutral-900 hover:text-white hover:border-neutral-900 text-neutral-700 border-neutral-100"

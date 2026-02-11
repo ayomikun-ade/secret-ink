@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Heart,
-  PenTool as Pen,
-  Calendar,
-  Loader2,
-  Sparkles,
-  ArrowRight,
-} from "lucide-react";
+  FavouriteIcon,
+  PencilEdit01Icon,
+  Calendar03Icon,
+  SparklesIcon,
+  ArrowRight01Icon,
+} from "@hugeicons/core-free-icons";
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -39,7 +40,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-12 md:py-24">
+    <main className="relative font-sans min-h-screen overflow-hidden px-4 py-12 md:py-24">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-red/5 rounded-full blur-3xl" />
@@ -52,15 +53,27 @@ export default function Home() {
             <div className="relative group cursor-default">
               <div className="absolute -inset-1 bg-brand-red rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
               <div className="relative bg-white p-4 rounded-full shadow-sm transition-transform duration-500 hover:scale-110 border border-neutral-100">
-                <Heart className="w-12 h-12 text-brand-red fill-brand-red/10 animate-heartbeat" />
-                <Pen className="w-6 h-6 text-neutral-900 absolute -bottom-1 -right-1" />
+                <HugeiconsIcon
+                  icon={FavouriteIcon}
+                  size={48}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-12 h-12 text-brand-red fill-brand-red/10 animate-heartbeat"
+                />
+                <HugeiconsIcon
+                  icon={PencilEdit01Icon}
+                  size={24}
+                  color="currentColor"
+                  strokeWidth={2}
+                  className="w-6 h-6 text-neutral-900 absolute -bottom-1 -right-1"
+                />
               </div>
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-neutral-900 mb-2 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-serif font-black text-neutral-900 mb-2 tracking-tight">
             SecretInk
           </h1>
-          <p className="text-xl text-neutral-700 max-w-lg mx-auto font-medium">
+          <p className="text-xl font-sans text-neutral-700 max-w-lg mx-auto font-medium">
             Where whispers become art. Create a private sanctuary for anonymous
             thoughts.
           </p>
@@ -69,8 +82,14 @@ export default function Home() {
         <div className="relative group">
           <div className="absolute -inset-1 bg-neutral-900/5 rounded-[2.5rem] blur-2xl opacity-50"></div>
           <div className="relative bg-white rounded-4xl shadow-xl shadow-neutral-900/10 p-8 md:p-12 border border-neutral-100">
-            <h2 className="text-2xl font-bold text-neutral-900 mb-8 flex items-center gap-3">
-              <Sparkles className="w-6 h-6 text-brand-red" />
+            <h2 className="text-2xl font-serif font-bold text-neutral-900 mb-8 flex items-center gap-3">
+              <HugeiconsIcon
+                icon={SparklesIcon}
+                size={24}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-6 h-6 text-brand-red"
+              />
               Begin Your Journey
             </h2>
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -92,7 +111,13 @@ export default function Home() {
 
                   <div className="group">
                     <label className="text-sm font-bold text-neutral-900 mb-2 ml-1 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-neutral-700" />
+                      <HugeiconsIcon
+                        icon={Calendar03Icon}
+                        size={16}
+                        color="currentColor"
+                        strokeWidth={2}
+                        className="w-4 h-4 text-neutral-700"
+                      />
                       Expiry Date (Optional)
                     </label>
                     <input
@@ -121,7 +146,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative w-full overflow-hidden bg-neutral-900 hover:bg-neutral-900/90 disabled:bg-neutral-100 text-white font-black py-5 rounded-2xl shadow-xl transition-all duration-300 flex items-center justify-center gap-3 text-xl active:scale-95"
+                className="group relative w-full overflow-hidden bg-neutral-900 hover:bg-neutral-900/90 disabled:bg-neutral-100 text-white font-black py-3 rounded-2xl shadow-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg active:scale-95"
               >
                 <span className="relative z-10 flex items-center gap-3">
                   {isSubmitting ? (
@@ -131,8 +156,14 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      Create My Secret Space
-                      <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Create Secret Space
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        size={24}
+                        color="currentColor"
+                        strokeWidth={2}
+                        className="w-6 h-6 group-hover:translate-x-1 transition-transform"
+                      />
                     </>
                   )}
                 </span>
@@ -161,14 +192,14 @@ export default function Home() {
           ].map((item) => (
             <div
               key={item.step}
-              className="group p-6 rounded-3xl hover:bg-white transition-colors duration-500 shadow-none hover:shadow-xl hover:shadow-neutral-900/5"
+              className="group p-6 rounded-3xl bg-[#f0f0f0] hover:bg-white transition-colors duration-500 shadow-none hover:shadow-xl hover:shadow-neutral-900/5"
             >
               <div className="bg-neutral-100 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
                 <span className="text-neutral-900 font-black text-xl">
                   {item.step}
                 </span>
               </div>
-              <h3 className="font-bold text-neutral-900 text-lg mb-2">
+              <h3 className="font-bold font-serif text-neutral-900 text-lg mb-2">
                 {item.title}
               </h3>
               <p className="text-neutral-700 font-medium leading-relaxed">

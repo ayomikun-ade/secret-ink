@@ -19,8 +19,8 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SecretInk - Anonymous Confessions",
-  description: "Share your secrets anonymously on private boards.",
+  title: "SecretInk - Anonymous Messaging",
+  description: "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
 };
 
 export default function RootLayout({

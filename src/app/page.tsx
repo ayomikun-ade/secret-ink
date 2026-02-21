@@ -7,17 +7,19 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  FavouriteIcon,
+  MessageAdd01Icon,
   PencilEdit01Icon,
   Calendar03Icon,
   SparklesIcon,
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
+import { ThemeSelector, type Theme } from "@/components/ThemeSelector";
 
 export default function Home() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [expiry, setExpiry] = useState("");
+  const [theme, setTheme] = useState<Theme>("indigo");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createBoard = useMutation(api.boards.create);
   const router = useRouter();
@@ -29,7 +31,7 @@ export default function Home() {
     setIsSubmitting(true);
     try {
       const expiresAt = expiry ? new Date(expiry).getTime() : undefined;
-      const { slug } = await createBoard({ name, description, expiresAt });
+      const { slug } = await createBoard({ name, description, expiresAt, theme });
       router.push(`/board/${slug}`);
     } catch (error) {
       console.error("Failed to create board:", error);
@@ -43,7 +45,7 @@ export default function Home() {
     <main className="relative font-sans min-h-screen overflow-hidden px-4 py-12 md:py-24">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-red/5 rounded-full blur-3xl" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neutral-900/5 rounded-full blur-3xl" />
       </div>
 
@@ -51,14 +53,14 @@ export default function Home() {
         <div className="text-center mb-16 space-y-4">
           <div className="flex justify-center mb-6">
             <div className="relative group cursor-default">
-              <div className="absolute -inset-1 bg-brand-red rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+              <div className="absolute -inset-1 bg-brand-primary rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
               <div className="relative bg-white p-4 rounded-full shadow-sm transition-transform duration-500 hover:scale-110 border border-neutral-100">
                 <HugeiconsIcon
-                  icon={FavouriteIcon}
+                  icon={MessageAdd01Icon}
                   size={48}
                   color="currentColor"
                   strokeWidth={2}
-                  className="w-12 h-12 text-brand-red fill-brand-red/10 animate-heartbeat"
+                  className="w-12 h-12 text-brand-primary"
                 />
                 <HugeiconsIcon
                   icon={PencilEdit01Icon}
@@ -74,8 +76,7 @@ export default function Home() {
             SecretInk
           </h1>
           <p className="text-xl font-sans text-neutral-700 max-w-lg mx-auto font-medium">
-            Where whispers become art. Create a private sanctuary for anonymous
-            thoughts.
+            Anonymous thoughts, authentic voices. Create a private space for honest conversations.
           </p>
         </div>
 
@@ -88,9 +89,9 @@ export default function Home() {
                 size={24}
                 color="currentColor"
                 strokeWidth={2}
-                className="w-6 h-6 text-brand-red"
+                className="w-6 h-6 text-brand-primary"
               />
-              Begin Your Journey
+              Create Your Board
             </h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid md:grid-cols-2 gap-8">
@@ -102,8 +103,8 @@ export default function Home() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g., Midnight Letters"
-                      className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-red focus:bg-white outline-none transition-all duration-300 placeholder:text-neutral-700/30"
+                      placeholder="e.g., Team Feedback, Q&A Session"
+                      className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-primary focus:bg-white outline-none transition-all duration-300 placeholder:text-neutral-700/30"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />
@@ -122,7 +123,7 @@ export default function Home() {
                     </label>
                     <input
                       type="datetime-local"
-                      className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-red focus:bg-white outline-none transition-all duration-300"
+                      className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-primary focus:bg-white outline-none transition-all duration-300"
                       value={expiry}
                       onChange={(e) => setExpiry(e.target.value)}
                     />
@@ -135,13 +136,15 @@ export default function Home() {
                   </label>
                   <textarea
                     rows={5}
-                    placeholder="Tell them what this space is for..."
-                    className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-red focus:bg-white outline-none transition-all duration-300 placeholder:text-neutral-700/30 resize-none"
+                    placeholder="Share guidelines or what this board is for..."
+                    className="w-full px-5 py-4 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-primary focus:bg-white outline-none transition-all duration-300 placeholder:text-neutral-700/30 resize-none"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
               </div>
+
+              <ThemeSelector selected={theme} onChange={setTheme} />
 
               <button
                 type="submit"
@@ -156,7 +159,7 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      Create Secret Space
+                      Create Board
                       <HugeiconsIcon
                         icon={ArrowRight01Icon}
                         size={24}
@@ -177,17 +180,17 @@ export default function Home() {
             {
               step: 1,
               title: "Create",
-              desc: "Define your private realm in seconds.",
+              desc: "Set up your anonymous board in seconds.",
             },
             {
               step: 2,
               title: "Share",
-              desc: "Invite others with a single link.",
+              desc: "Invite participants with a single link.",
             },
             {
               step: 3,
-              title: "Reveal",
-              desc: "Experience raw, anonymous real-time feed.",
+              title: "Engage",
+              desc: "Get authentic feedback and honest thoughts.",
             },
           ].map((item) => (
             <div

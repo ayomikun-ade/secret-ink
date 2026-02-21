@@ -7,6 +7,14 @@ export const create = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
+    theme: v.optional(v.union(
+      v.literal("indigo"),
+      v.literal("teal"),
+      v.literal("amber"),
+      v.literal("red"),
+      v.literal("purple"),
+      v.literal("emerald")
+    )),
   },
   handler: async (ctx, args) => {
     const slug = nanoid(10);
@@ -19,6 +27,7 @@ export const create = mutation({
       expiresAt: args.expiresAt ?? (Date.now() + 12 * 60 * 60 * 1000),
       ownerToken,
       isLocked: false,
+      theme: args.theme ?? "indigo",
     });
     return { boardId, slug };
   },

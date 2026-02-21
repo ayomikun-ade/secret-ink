@@ -53,6 +53,16 @@ export default function BoardPage({
     setFingerprint(getFingerprint());
   }, []);
 
+  // Apply theme to document
+  useEffect(() => {
+    if (board?.theme) {
+      document.documentElement.setAttribute("data-theme", board.theme);
+    }
+    return () => {
+      document.documentElement.removeAttribute("data-theme");
+    };
+  }, [board?.theme]);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -86,7 +96,7 @@ export default function BoardPage({
   if (board === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-red" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -132,7 +142,7 @@ export default function BoardPage({
         <header className="mb-12">
           <Link
             href="/"
-            className="group inline-flex items-center gap-2 text-neutral-900 hover:text-brand-red font-bold mb-8 transition-all"
+            className="group inline-flex items-center gap-2 text-neutral-900 hover:text-brand-primary font-bold mb-8 transition-all"
           >
             <div className="bg-white p-1.5 rounded-lg shadow-sm group-hover:shadow-md transition-all border border-neutral-100">
               <HugeiconsIcon
@@ -153,7 +163,7 @@ export default function BoardPage({
                   size={12}
                   color="currentColor"
                   strokeWidth={2}
-                  className="w-3 h-3 text-brand-red"
+                  className="w-3 h-3 text-brand-primary"
                 />{" "}
                 Private Board
               </div>
@@ -201,17 +211,17 @@ export default function BoardPage({
                 size={24}
                 color="currentColor"
                 strokeWidth={2}
-                className="w-6 h-6 text-brand-red"
+                className="w-6 h-6 text-brand-primary"
               />
-              Cast Your Whisper
+              Share Your Thoughts
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="relative">
                 <textarea
                   required
                   maxLength={300}
-                  placeholder="The floor is yours... anonymously."
-                  className="w-full p-6 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-red focus:bg-white outline-none transition-all min-h-40 resize-none text-neutral-900 text-lg placeholder:text-neutral-700/30 font-medium"
+                  placeholder="Share your thoughts anonymously..."
+                  className="w-full p-6 rounded-2xl bg-neutral-100 border-2 border-transparent focus:border-brand-primary focus:bg-white outline-none transition-all min-h-40 resize-none text-neutral-900 text-lg placeholder:text-neutral-700/30 font-medium"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
@@ -220,7 +230,7 @@ export default function BoardPage({
                     className={cn(
                       "text-xs font-black tracking-tighter transition-colors",
                       content.length > 280
-                        ? "text-brand-red"
+                        ? "text-brand-primary"
                         : "text-neutral-700/30",
                     )}
                   >
@@ -233,7 +243,7 @@ export default function BoardPage({
                   <input
                     type="text"
                     placeholder="Nickname (Optional)"
-                    className="w-full px-6 py-4 rounded-xl bg-neutral-100 border-2 border-transparent focus:border-brand-red focus:bg-white outline-none transition-all text-sm font-bold placeholder:text-neutral-700/30"
+                    className="w-full px-6 py-4 rounded-xl bg-neutral-100 border-2 border-transparent focus:border-brand-primary focus:bg-white outline-none transition-all text-sm font-bold placeholder:text-neutral-700/30"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                   />
@@ -254,13 +264,13 @@ export default function BoardPage({
                       className="w-5 h-5"
                     />
                   )}
-                  Post Whisper
+                  Post Message
                 </button>
               </div>
               {error && (
                 <div className="p-3 bg-red-50 rounded-xl border border-red-100">
-                  <p className="text-brand-red text-xs font-bold flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-brand-red rounded-full animate-pulse" />
+                  <p className="text-brand-primary text-xs font-bold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
                     {error}
                   </p>
                 </div>
@@ -272,7 +282,7 @@ export default function BoardPage({
         <div className="space-y-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-serif font-black text-neutral-900 flex items-center gap-3">
-              Whispers in the Wind
+              Recent Messages
               {confessions && (
                 <span className="bg-neutral-900 text-white text-sm px-3 py-1 rounded-full font-black">
                   {confessions.length}
@@ -285,7 +295,7 @@ export default function BoardPage({
             <div className="flex flex-col items-center py-20 animate-pulse">
               <Loader2 className="w-8 h-8 text-neutral-700 animate-spin mb-4" />
               <p className="text-neutral-700 font-bold uppercase tracking-widest text-xs">
-                Summoning Whispers...
+                Loading Messages...
               </p>
             </div>
           ) : confessions.length === 0 ? (
@@ -300,10 +310,10 @@ export default function BoardPage({
                 />
               </div>
               <p className="text-neutral-900 font-black text-lg">
-                Silence is golden, but whispers are better.
+                No messages yet.
               </p>
               <p className="text-neutral-700 font-medium">
-                Be the first to speak into the ink.
+                Be the first to share your thoughts.
               </p>
             </div>
           ) : (
@@ -380,7 +390,7 @@ function ConfessionCard({
           }
           count={counts?.love || 0}
           onClick={() => handleReact("love")}
-          color="hover:bg-brand-red hover:text-white hover:border-brand-red text-neutral-700 border-neutral-100"
+          color="hover:bg-brand-primary hover:text-white hover:border-brand-primary text-neutral-700 border-neutral-100"
           label="Love"
         />
         <ReactionButton

@@ -10,6 +10,14 @@ export default defineSchema({
     expiresAt: v.optional(v.number()),
     ownerToken: v.string(),
     isLocked: v.boolean(),
+    theme: v.optional(v.union(
+      v.literal("indigo"),
+      v.literal("teal"),
+      v.literal("amber"),
+      v.literal("red"),
+      v.literal("purple"),
+      v.literal("emerald")
+    )),
   })
     .index("by_slug", ["slug"])
     .index("by_expiresAt", ["expiresAt"]),

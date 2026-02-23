@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { Geist, JetBrains_Mono, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 
-const fontSans = Inter({
+const fontSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const fontSerif = Playfair_Display({
+const fontSerif = Crimson_Pro({
   variable: "--font-serif",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const fontMono = JetBrains_Mono({
@@ -20,7 +21,8 @@ const fontMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "SecretInk - Anonymous Messaging",
-  description: "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
+  description:
+    "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
 };
 
 export default function RootLayout({
@@ -31,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fontSans.variable} ${fontMono.variable} ${fontSerif.variable} antialiased min-h-screen bg-neutral-100 text-neutral-900`}
+        className={`${fontSans.variable} ${fontMono.variable} ${fontSerif.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>

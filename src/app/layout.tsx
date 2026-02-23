@@ -23,6 +23,37 @@ export const metadata: Metadata = {
   title: "SecretInk - Anonymous Messaging",
   description:
     "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
+  keywords: [
+    "anonymous messaging",
+    "private boards",
+    "feedback",
+    "Q&A",
+    "confessions",
+    "anonymous thoughts",
+  ],
+  authors: [{ name: "SecretInk" }],
+  creator: "SecretInk",
+  openGraph: {
+    type: "website",
+    locale: "en_NG",
+    url: "https://secret-ink.pxxl.click",
+    title: "SecretInk - Anonymous Messaging",
+    description:
+      "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
+    siteName: "SecretInk",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SecretInk - Anonymous Messaging",
+    description:
+      "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
+    creator: "@theayomikunade",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  metadataBase: new URL("https://secret-ink.pxxl.click"),
 };
 
 export default function RootLayout({

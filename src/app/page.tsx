@@ -89,7 +89,7 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-5xl md:text-7xl font-serif font-black text-text-primary mb-2 tracking-tight">
-            SecretInk
+            Murmer
           </h1>
           <p className="text-xl font-sans text-text-secondary max-w-lg mx-auto font-medium">
             Anonymous thoughts, authentic voices. Create a private space for

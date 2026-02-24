@@ -20,7 +20,7 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SecretInk - Anonymous Messaging",
+  title: "Murmer - Anonymous Messaging",
   description:
     "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
   keywords: [
@@ -31,23 +31,32 @@ export const metadata: Metadata = {
     "confessions",
     "anonymous thoughts",
   ],
-  authors: [{ name: "SecretInk" }],
-  creator: "SecretInk",
+  authors: [{ name: "Murmer" }],
+  creator: "Murmer",
   openGraph: {
     type: "website",
     locale: "en_NG",
     url: "https://secret-ink.pxxl.click",
-    title: "SecretInk - Anonymous Messaging",
+    title: "Murmer - Anonymous Messaging",
     description:
       "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
-    siteName: "SecretInk",
+    siteName: "Murmer",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Murmer - Anonymous thoughts, authentic voices",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SecretInk - Anonymous Messaging",
+    title: "Murmer - Anonymous Messaging",
     description:
       "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
     creator: "@theayomikunade",
+    images: ["/twitter-image"],
   },
   robots: {
     index: true,

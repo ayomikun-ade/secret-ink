@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://secret-ink.pxxl.click",
+    url: "https://murmerr.vercel.app/",
     title: "Murmer - Anonymous Messaging",
     description:
       "Share thoughts anonymously on private boards. Perfect for feedback, Q&A, and authentic conversations.",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  metadataBase: new URL("https://secret-ink.pxxl.click"),
+  metadataBase: new URL("https://murmerr.vercel.app"),
 };
 
 export default function RootLayout({

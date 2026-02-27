@@ -4,7 +4,6 @@ import { use, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { getFingerprint } from "@/lib/fingerprint";
-import { Loader2 } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   FavouriteIcon,
@@ -18,6 +17,7 @@ import {
   TickDouble02Icon,
   ArrowLeft01Icon,
   SparklesIcon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -96,7 +96,13 @@ export default function BoardPage({
   if (board === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
+        <HugeiconsIcon
+          icon={Loading03Icon}
+          size={40}
+          color="currentColor"
+          strokeWidth={2}
+          className="w-10 h-10 animate-spin text-brand-primary"
+        />
       </div>
     );
   }
@@ -254,7 +260,13 @@ export default function BoardPage({
                   className="w-full sm:w-auto bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-black transition-all flex items-center justify-center gap-3 shadow-brand active:scale-98"
                 >
                   {isSubmitting ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <HugeiconsIcon
+                      icon={Loading03Icon}
+                      size={20}
+                      color="currentColor"
+                      strokeWidth={2}
+                      className="w-5 h-5 animate-spin"
+                    />
                   ) : (
                     <HugeiconsIcon
                       icon={SentIcon}
@@ -293,7 +305,13 @@ export default function BoardPage({
 
           {!confessions ? (
             <div className="flex flex-col items-center py-20 animate-pulse">
-              <Loader2 className="w-8 h-8 text-text-secondary animate-spin mb-4" />
+              <HugeiconsIcon
+                icon={Loading03Icon}
+                size={32}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-8 h-8 text-brand-primary animate-spin mb-4"
+              />
               <p className="text-text-secondary font-bold uppercase tracking-widest text-xs">
                 Loading Messages...
               </p>

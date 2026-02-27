@@ -243,3 +243,28 @@ body {
 .border-3 {
   border-width: 3px;
 }
+
+/* iOS datetime picker overflow fix */
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  position: relative;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Ensure datetime picker modal isn't clipped on iOS */
+@supports (-webkit-touch-callout: none) {
+  input[type="datetime-local"] {
+    position: relative;
+    z-index: 50;
+  }
+
+  /* Prevent overflow clipping on glass containers */
+  .glass {
+    overflow: visible !important;
+  }
+}

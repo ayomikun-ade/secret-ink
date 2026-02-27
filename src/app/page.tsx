@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CommentAdd01Icon,
   Calendar03Icon,
   SparklesIcon,
   ArrowRight01Icon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { ThemeSelector, type Theme } from "@/components/ThemeSelector";
 
@@ -20,13 +20,23 @@ export default function Home() {
   const [expiry, setExpiry] = useState("");
   const [theme, setTheme] = useState<Theme>("teal");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const createBoard = useMutation(api.boards.create);
   const router = useRouter();
+
+  // Calculate min and max expiry times
+  const minExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000) // 1 hour from now
+    .toISOString()
+    .slice(0, 16);
+  const maxExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days from now
+    .toISOString()
+    .slice(0, 16);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) return;
 
+    setError(null);
     setIsSubmitting(true);
     try {
       const expiresAt = expiry ? new Date(expiry).getTime() : undefined;
@@ -39,7 +49,11 @@ export default function Home() {
       router.push(`/board/${slug}`);
     } catch (error) {
       console.error("Failed to create board:", error);
-      alert("Something went wrong. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -140,10 +154,15 @@ export default function Home() {
                     </label>
                     <input
                       type="datetime-local"
+                      min={minExpiry}
+                      max={maxExpiry}
                       className="w-full px-5 py-4 rounded-lg bg-input-bg border-3 border-border-primary focus:border-brand-primary focus:shadow-brutal outline-none transition-all duration-200 text-text-primary"
                       value={expiry}
                       onChange={(e) => setExpiry(e.target.value)}
                     />
+                    <p className="text-xs text-text-muted mt-2 ml-1">
+                      Min: 1 hour, Max: 7 days (Default: 12 hours)
+                    </p>
                   </div>
                 </div>
 
@@ -171,7 +190,13 @@ export default function Home() {
                 <span className="relative z-10 flex items-center gap-3">
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <HugeiconsIcon
+                        icon={Loading03Icon}
+                        size={24}
+                        color="currentColor"
+                        strokeWidth={2}
+                        className="w-6 h-6 animate-spin"
+                      />
                       Crafting Board...
                     </>
                   ) : (
@@ -188,6 +213,15 @@ export default function Home() {
                   )}
                 </span>
               </button>
+
+              {error && (
+                <div className="p-4 bg-red-500/10 rounded-xl border-3 border-red-500/30">
+                  <p className="text-red-400 text-sm font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+                    {error}
+                  </p>
+                </div>
+              )}
             </form>
           </div>
         </div>

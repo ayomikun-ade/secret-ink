@@ -7,44 +7,42 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CommentAdd01Icon,
-  Calendar03Icon,
   SparklesIcon,
   ArrowRight01Icon,
   Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { ThemeSelector, type Theme } from "@/components/ThemeSelector";
+import { DateTimePicker } from "@/components/DateTimePicker";
+import { toast } from "sonner";
 
 export default function Home() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [expiry, setExpiry] = useState("");
+  const [expiry, setExpiry] = useState<Date | undefined>(undefined);
   const [theme, setTheme] = useState<Theme>("teal");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const createBoard = useMutation(api.boards.create);
   const router = useRouter();
 
   // Calculate min and max expiry times
-  const minExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000) // 1 hour from now
-    .toISOString()
-    .slice(0, 16);
-  const maxExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days from now
-    .toISOString()
-    .slice(0, 16);
+  const minExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
+  const maxExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days from now
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) return;
 
-    setError(null);
     setIsSubmitting(true);
     try {
-      const expiresAt = expiry ? new Date(expiry).getTime() : undefined;
+      const expiresAt = expiry ? expiry.getTime() : undefined;
       const { slug } = await createBoard({
         name,
         description,
         expiresAt,
         theme,
+      });
+      toast.success("Board created successfully!", {
+        description: `Redirecting to your board...`,
       });
       router.push(`/board/${slug}`);
     } catch (error) {
@@ -53,7 +51,9 @@ export default function Home() {
         error instanceof Error
           ? error.message
           : "Something went wrong. Please try again.";
-      setError(errorMessage);
+      toast.error("Failed to create board", {
+        description: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -142,26 +142,18 @@ export default function Home() {
                   </div>
 
                   <div className="group">
-                    <label className="text-sm font-bold text-text-primary mb-2 ml-1 flex items-center gap-2">
-                      <HugeiconsIcon
-                        icon={Calendar03Icon}
-                        size={16}
-                        color="currentColor"
-                        strokeWidth={2}
-                        className="w-4 h-4 text-text-secondary"
-                      />
+                    <label className="text-sm font-bold text-text-primary mb-2 ml-1">
                       Expiry Date (Optional)
                     </label>
-                    <input
-                      type="datetime-local"
-                      min={minExpiry}
-                      max={maxExpiry}
-                      className="w-full px-5 py-4 rounded-lg bg-input-bg border-3 border-border-primary focus:border-brand-primary focus:shadow-brutal outline-none transition-all duration-200 text-text-primary"
-                      value={expiry}
-                      onChange={(e) => setExpiry(e.target.value)}
+                    <DateTimePicker
+                      date={expiry}
+                      onDateChange={setExpiry}
+                      minDate={minExpiry}
+                      maxDate={maxExpiry}
+                      placeholder="Select expiry date and time"
                     />
                     <p className="text-xs text-text-muted mt-2 ml-1">
-                      Min: 1 hour, Max: 7 days (Default: 12 hours)
+                      Min: 1 hour, Max: 14 days (Default: 12 hours)
                     </p>
                   </div>
                 </div>
@@ -213,15 +205,6 @@ export default function Home() {
                   )}
                 </span>
               </button>
-
-              {error && (
-                <div className="p-4 bg-red-500/10 rounded-xl border-3 border-red-500/30">
-                  <p className="text-red-400 text-sm font-bold flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-                    {error}
-                  </p>
-                </div>
-              )}
             </form>
           </div>
         </div>

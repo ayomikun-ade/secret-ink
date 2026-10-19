@@ -63,3 +63,15 @@ export const list = query({
     return confessions.filter((c) => !c.expiresAt || c.expiresAt > Date.now());
   },
 });
+
+export const getById = query({
+  args: { confessionId: v.id("confessions") },
+  handler: async (ctx, args) => {
+    const confession = await ctx.db.get(args.confessionId);
+    if (!confession) return null;
+    if (confession.expiresAt && confession.expiresAt < Date.now()) {
+      return null;
+    }
+    return confession;
+  },
+});

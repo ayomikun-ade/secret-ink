@@ -12,6 +12,7 @@ import type * as boards from "../boards.js";
 import type * as confessions from "../confessions.js";
 import type * as crons from "../crons.js";
 import type * as reactions from "../reactions.js";
+import type * as replies from "../replies.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   confessions: typeof confessions;
   crons: typeof crons;
   reactions: typeof reactions;
+  replies: typeof replies;
 }>;
 
 /**

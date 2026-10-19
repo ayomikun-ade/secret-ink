@@ -20,6 +20,21 @@ export const cleanupExpired = internalMutation({
         .collect();
 
       for (const confession of confessions) {
+        const replies = await ctx.db
+          .query("replies")
+          .withIndex("by_confessionId", (q) => q.eq("confessionId", confession._id))
+          .collect();
+        for (const reply of replies) {
+          const replyReactions = await ctx.db
+            .query("reactions")
+            .withIndex("by_replyId", (q) => q.eq("replyId", reply._id))
+            .collect();
+          for (const reaction of replyReactions) {
+            await ctx.db.delete(reaction._id);
+          }
+          await ctx.db.delete(reply._id);
+        }
+
         const reactions = await ctx.db
           .query("reactions")
           .withIndex("by_confessionId", (q) => q.eq("confessionId", confession._id))
@@ -39,6 +54,21 @@ export const cleanupExpired = internalMutation({
       .collect();
 
     for (const confession of expiredConfessions) {
+      const replies = await ctx.db
+        .query("replies")
+        .withIndex("by_confessionId", (q) => q.eq("confessionId", confession._id))
+        .collect();
+      for (const reply of replies) {
+        const replyReactions = await ctx.db
+          .query("reactions")
+          .withIndex("by_replyId", (q) => q.eq("replyId", reply._id))
+          .collect();
+        for (const reaction of replyReactions) {
+          await ctx.db.delete(reaction._id);
+        }
+        await ctx.db.delete(reply._id);
+      }
+
       const reactions = await ctx.db
         .query("reactions")
         .withIndex("by_confessionId", (q) => q.eq("confessionId", confession._id))

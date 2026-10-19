@@ -17,6 +17,7 @@ export const create = mutation({
         v.literal("emerald"),
       ),
     ),
+    allowReplies: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -46,6 +47,7 @@ export const create = mutation({
       ownerToken,
       isLocked: false,
       theme: args.theme ?? "indigo",
+      allowReplies: args.allowReplies ?? true,
     });
     return { boardId, slug };
   },

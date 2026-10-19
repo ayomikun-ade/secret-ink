@@ -20,6 +20,7 @@ export default function Home() {
   const [description, setDescription] = useState("");
   const [expiry, setExpiry] = useState<Date | undefined>(undefined);
   const [theme, setTheme] = useState<Theme>("teal");
+  const [allowReplies, setAllowReplies] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createBoard = useMutation(api.boards.create);
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function Home() {
         description,
         expiresAt,
         theme,
+        allowReplies,
       });
       toast.success("Board created successfully!", {
         description: `Redirecting to your board...`,
@@ -170,6 +172,58 @@ export default function Home() {
                     onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-bold text-text-primary ml-1">
+                  Discussion Settings
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setAllowReplies((prev) => !prev)}
+                  className={`w-full flex items-center justify-between p-4 rounded-lg border-3 transition-all duration-200 text-left ${
+                    allowReplies
+                      ? "border-brand-primary bg-surface-elevated shadow-brutal"
+                      : "border-border-primary bg-surface hover:border-brand-primary/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
+                        allowReplies
+                          ? "bg-brand-primary/15 border-brand-primary text-brand-primary"
+                          : "bg-surface-elevated border-border-primary text-text-muted"
+                      }`}
+                    >
+                      <HugeiconsIcon
+                        icon={CommentAdd01Icon}
+                        size={20}
+                        color="currentColor"
+                        strokeWidth={2}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                    <div>
+                      <div className="font-bold text-text-primary text-sm">
+                        Allow Replies on Confessions
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        {allowReplies
+                          ? "Participants can open a thread and reply to confessions"
+                          : "Confessions are read-only with reactions (no replies)"}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-12 h-7 flex items-center rounded-full p-1 transition-colors border-2 ${
+                      allowReplies
+                        ? "bg-brand-primary border-brand-primary justify-end"
+                        : "bg-input-bg border-border-primary justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                  </div>
+                </button>
               </div>
 
               <ThemeSelector selected={theme} onChange={setTheme} />

@@ -341,6 +341,8 @@ export default function BoardPage({
                   key={confession._id}
                   confession={confession}
                   fingerprint={fingerprint}
+                  slug={slug}
+                  allowReplies={board.allowReplies !== false}
                 />
               ))}
             </div>
@@ -354,13 +356,22 @@ export default function BoardPage({
 function ConfessionCard({
   confession,
   fingerprint,
+  slug,
+  allowReplies,
 }: {
   confession: Doc<"confessions">;
   fingerprint: string;
+  slug: string;
+  allowReplies: boolean;
 }) {
   const counts = useQuery(api.reactions.getCounts, {
     confessionId: confession._id,
+    fingerprint: fingerprint || undefined,
   });
+  const replyCount = useQuery(
+    api.replies.getCount,
+    allowReplies ? { confessionId: confession._id } : "skip"
+  );
   const toggleReaction = useMutation(api.reactions.toggle);
 
   const handleReact = (type: "love" | "laugh" | "shock" | "sad") => {
@@ -380,6 +391,11 @@ function ConfessionCard({
           <span className="font-black text-text-primary tracking-tight">
             {confession.nickname || "Anonymous"}
           </span>
+          {fingerprint && confession.fingerprint === fingerprint && (
+            <span className="px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/30 text-[10px] font-black uppercase tracking-wider">
+              You
+            </span>
+          )}
         </div>
         <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-3 py-1 rounded-full border border-border-secondary">
           <HugeiconsIcon
@@ -395,67 +411,91 @@ function ConfessionCard({
       <p className="text-text-primary text-xl leading-relaxed mb-8 font-medium whitespace-pre-wrap tracking-tight">
         {confession.content}
       </p>
-      <div className="flex flex-wrap gap-3">
-        <ReactionButton
-          icon={
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
+          <ReactionButton
+            icon={
+              <HugeiconsIcon
+                icon={FavouriteIcon}
+                size={16}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-4 h-4"
+              />
+            }
+            count={counts?.love || 0}
+            isActive={counts?.userReaction === "love"}
+            onClick={() => handleReact("love")}
+            color="hover:bg-brand-primary hover:text-white hover:border-brand-primary text-text-secondary border-border-primary"
+            label="Love"
+          />
+          <ReactionButton
+            icon={
+              <HugeiconsIcon
+                icon={SmileIcon}
+                size={16}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-4 h-4"
+              />
+            }
+            count={counts?.laugh || 0}
+            isActive={counts?.userReaction === "laugh"}
+            onClick={() => handleReact("laugh")}
+            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
+            label="Haha"
+          />
+          <ReactionButton
+            icon={
+              <HugeiconsIcon
+                icon={SurpriseIcon}
+                size={16}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-4 h-4"
+              />
+            }
+            count={counts?.shock || 0}
+            isActive={counts?.userReaction === "shock"}
+            onClick={() => handleReact("shock")}
+            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
+            label="Wow"
+          />
+          <ReactionButton
+            icon={
+              <HugeiconsIcon
+                icon={UnhappyIcon}
+                size={16}
+                color="currentColor"
+                strokeWidth={2}
+                className="w-4 h-4"
+              />
+            }
+            count={counts?.sad || 0}
+            isActive={counts?.userReaction === "sad"}
+            onClick={() => handleReact("sad")}
+            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
+            label="Sad"
+          />
+        </div>
+
+        {allowReplies && (
+          <Link
+            href={`/board/${slug}/confession/${confession._id}`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border-primary bg-surface hover:bg-brand-primary hover:text-white hover:border-brand-primary text-text-secondary transition-all duration-300 text-sm font-black active:scale-95 shadow-sm"
+          >
             <HugeiconsIcon
-              icon={FavouriteIcon}
+              icon={MessageAdd01Icon}
               size={16}
               color="currentColor"
               strokeWidth={2}
               className="w-4 h-4"
             />
-          }
-          count={counts?.love || 0}
-          onClick={() => handleReact("love")}
-          color="hover:bg-brand-primary hover:text-white hover:border-brand-primary text-text-secondary border-border-primary"
-          label="Love"
-        />
-        <ReactionButton
-          icon={
-            <HugeiconsIcon
-              icon={SmileIcon}
-              size={16}
-              color="currentColor"
-              strokeWidth={2}
-              className="w-4 h-4"
-            />
-          }
-          count={counts?.laugh || 0}
-          onClick={() => handleReact("laugh")}
-          color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-          label="Haha"
-        />
-        <ReactionButton
-          icon={
-            <HugeiconsIcon
-              icon={SurpriseIcon}
-              size={16}
-              color="currentColor"
-              strokeWidth={2}
-              className="w-4 h-4"
-            />
-          }
-          count={counts?.shock || 0}
-          onClick={() => handleReact("shock")}
-          color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-          label="Wow"
-        />
-        <ReactionButton
-          icon={
-            <HugeiconsIcon
-              icon={UnhappyIcon}
-              size={16}
-              color="currentColor"
-              strokeWidth={2}
-              className="w-4 h-4"
-            />
-          }
-          count={counts?.sad || 0}
-          onClick={() => handleReact("sad")}
-          color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-          label="Sad"
-        />
+            <span>
+              {replyCount ?? 0} {replyCount === 1 ? "Reply" : "Replies"}
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -464,12 +504,14 @@ function ConfessionCard({
 function ReactionButton({
   icon,
   count,
+  isActive,
   onClick,
   color,
   label,
 }: {
   icon: React.ReactNode;
   count: number;
+  isActive?: boolean;
   onClick: () => void;
   color: string;
   label: string;
@@ -477,16 +519,26 @@ function ReactionButton({
   return (
     <button
       onClick={onClick}
+      aria-pressed={isActive}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-xl border bg-surface transition-all duration-300 text-sm font-black active:scale-95 group/btn shadow-sm",
-        color,
+        "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 text-sm font-black active:scale-95 group/btn shadow-sm",
+        isActive
+          ? "bg-brand-primary text-white border-brand-primary shadow-brand"
+          : cn("bg-surface", color),
       )}
     >
       <span className="transition-transform group-hover/btn:scale-125 duration-300">
         {icon}
       </span>
       <span className="min-w-3">{count}</span>
-      <span className="text-[10px] uppercase opacity-0 group-hover/btn:opacity-100 transition-opacity w-0 group-hover/btn:w-auto overflow-hidden tracking-tighter ml-0 group-hover/btn:ml-1">
+      <span
+        className={cn(
+          "text-[10px] uppercase transition-opacity overflow-hidden tracking-tighter",
+          isActive
+            ? "opacity-100 w-auto ml-1"
+            : "opacity-0 group-hover/btn:opacity-100 w-0 group-hover/btn:w-auto ml-0 group-hover/btn:ml-1"
+        )}
+      >
         {label}
       </span>
     </button>

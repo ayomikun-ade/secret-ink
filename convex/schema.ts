@@ -50,12 +50,7 @@ export default defineSchema({
   reactions: defineTable({
     confessionId: v.optional(v.id("confessions")),
     replyId: v.optional(v.id("replies")),
-    type: v.union(
-      v.literal("love"),
-      v.literal("laugh"),
-      v.literal("shock"),
-      v.literal("sad")
-    ),
+    type: v.string(),
     fingerprint: v.string(),
     createdAt: v.number(),
   })

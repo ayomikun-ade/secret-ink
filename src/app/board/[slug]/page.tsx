@@ -10,9 +10,6 @@ import {
   MessageAdd01Icon,
   SentIcon,
   Clock01Icon,
-  SmileIcon,
-  SurpriseIcon,
-  UnhappyIcon,
   Share08Icon,
   TickDouble02Icon,
   ArrowLeft01Icon,
@@ -24,6 +21,7 @@ import { formatDistanceToNow } from "date-fns";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Doc } from "../../../../convex/_generated/dataModel";
+import { ReactionBar } from "@/components/ReactionBar";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -364,7 +362,7 @@ function ConfessionCard({
   slug: string;
   allowReplies: boolean;
 }) {
-  const counts = useQuery(api.reactions.getCounts, {
+  const reactionData = useQuery(api.reactions.getCounts, {
     confessionId: confession._id,
     fingerprint: fingerprint || undefined,
   });
@@ -374,9 +372,9 @@ function ConfessionCard({
   );
   const toggleReaction = useMutation(api.reactions.toggle);
 
-  const handleReact = (type: "love" | "laugh" | "shock" | "sad") => {
+  const handleReact = (unified: string) => {
     if (!fingerprint) return;
-    toggleReaction({ confessionId: confession._id, type, fingerprint });
+    toggleReaction({ confessionId: confession._id, type: unified, fingerprint });
   };
 
   return (
@@ -412,72 +410,11 @@ function ConfessionCard({
         {confession.content}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-3">
-          <ReactionButton
-            icon={
-              <HugeiconsIcon
-                icon={FavouriteIcon}
-                size={16}
-                color="currentColor"
-                strokeWidth={2}
-                className="w-4 h-4"
-              />
-            }
-            count={counts?.love || 0}
-            isActive={counts?.userReaction === "love"}
-            onClick={() => handleReact("love")}
-            color="hover:bg-brand-primary hover:text-white hover:border-brand-primary text-text-secondary border-border-primary"
-            label="Love"
-          />
-          <ReactionButton
-            icon={
-              <HugeiconsIcon
-                icon={SmileIcon}
-                size={16}
-                color="currentColor"
-                strokeWidth={2}
-                className="w-4 h-4"
-              />
-            }
-            count={counts?.laugh || 0}
-            isActive={counts?.userReaction === "laugh"}
-            onClick={() => handleReact("laugh")}
-            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-            label="Haha"
-          />
-          <ReactionButton
-            icon={
-              <HugeiconsIcon
-                icon={SurpriseIcon}
-                size={16}
-                color="currentColor"
-                strokeWidth={2}
-                className="w-4 h-4"
-              />
-            }
-            count={counts?.shock || 0}
-            isActive={counts?.userReaction === "shock"}
-            onClick={() => handleReact("shock")}
-            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-            label="Wow"
-          />
-          <ReactionButton
-            icon={
-              <HugeiconsIcon
-                icon={UnhappyIcon}
-                size={16}
-                color="currentColor"
-                strokeWidth={2}
-                className="w-4 h-4"
-              />
-            }
-            count={counts?.sad || 0}
-            isActive={counts?.userReaction === "sad"}
-            onClick={() => handleReact("sad")}
-            color="hover:bg-surface-elevated hover:text-text-primary hover:border-border-primary text-text-secondary border-border-primary"
-            label="Sad"
-          />
-        </div>
+        <ReactionBar
+          counts={reactionData?.counts}
+          userReaction={reactionData?.userReaction}
+          onToggleReaction={handleReact}
+        />
 
         {allowReplies && (
           <Link
@@ -498,49 +435,5 @@ function ConfessionCard({
         )}
       </div>
     </div>
-  );
-}
-
-function ReactionButton({
-  icon,
-  count,
-  isActive,
-  onClick,
-  color,
-  label,
-}: {
-  icon: React.ReactNode;
-  count: number;
-  isActive?: boolean;
-  onClick: () => void;
-  color: string;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={isActive}
-      className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 text-sm font-black active:scale-95 group/btn shadow-sm",
-        isActive
-          ? "bg-brand-primary text-white border-brand-primary shadow-brand"
-          : cn("bg-surface", color),
-      )}
-    >
-      <span className="transition-transform group-hover/btn:scale-125 duration-300">
-        {icon}
-      </span>
-      <span className="min-w-3">{count}</span>
-      <span
-        className={cn(
-          "text-[10px] uppercase transition-opacity overflow-hidden tracking-tighter",
-          isActive
-            ? "opacity-100 w-auto ml-1"
-            : "opacity-0 group-hover/btn:opacity-100 w-0 group-hover/btn:w-auto ml-0 group-hover/btn:ml-1"
-        )}
-      >
-        {label}
-      </span>
-    </button>
   );
 }

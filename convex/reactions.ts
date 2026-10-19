@@ -1,21 +1,33 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+const LEGACY_MAP: Record<string, string> = {
+  love: "2764-fe0f",
+  laugh: "1f602",
+  shock: "1f631",
+  sad: "1f622",
+};
+
+function normalizeReactionType(type: string): string {
+  const normalized = type.trim().toLowerCase();
+  return LEGACY_MAP[normalized] ?? normalized;
+}
+
 export const toggle = mutation({
   args: {
     confessionId: v.optional(v.id("confessions")),
     replyId: v.optional(v.id("replies")),
-    type: v.union(
-      v.literal("love"),
-      v.literal("laugh"),
-      v.literal("shock"),
-      v.literal("sad")
-    ),
+    type: v.string(),
     fingerprint: v.string(),
   },
   handler: async (ctx, args) => {
     if (!args.confessionId && !args.replyId) {
       throw new Error("Either confessionId or replyId must be provided");
+    }
+
+    const type = normalizeReactionType(args.type);
+    if (!type || type.length > 40) {
+      throw new Error("Invalid reaction emoji");
     }
 
     if (args.confessionId) {
@@ -35,12 +47,12 @@ export const toggle = mutation({
         .unique();
 
       if (existing) {
-        if (existing.type === args.type) {
+        if (normalizeReactionType(existing.type) === type) {
           await ctx.db.delete(existing._id);
           return { action: "removed" };
         } else {
           await ctx.db.patch(existing._id, {
-            type: args.type,
+            type,
             createdAt: Date.now(),
           });
           return { action: "updated" };
@@ -49,7 +61,7 @@ export const toggle = mutation({
 
       await ctx.db.insert("reactions", {
         confessionId: args.confessionId,
-        type: args.type,
+        type,
         fingerprint: args.fingerprint,
         createdAt: Date.now(),
       });
@@ -61,7 +73,10 @@ export const toggle = mutation({
       if (!reply) throw new Error("Reply not found");
 
       const confession = await ctx.db.get(reply.confessionId);
-      if (!confession || (confession.expiresAt && confession.expiresAt < Date.now())) {
+      if (
+        !confession ||
+        (confession.expiresAt && confession.expiresAt < Date.now())
+      ) {
         throw new Error("Parent confession has expired");
       }
 
@@ -73,12 +88,12 @@ export const toggle = mutation({
         .unique();
 
       if (existing) {
-        if (existing.type === args.type) {
+        if (normalizeReactionType(existing.type) === type) {
           await ctx.db.delete(existing._id);
           return { action: "removed" };
         } else {
           await ctx.db.patch(existing._id, {
-            type: args.type,
+            type,
             createdAt: Date.now(),
           });
           return { action: "updated" };
@@ -87,7 +102,7 @@ export const toggle = mutation({
 
       await ctx.db.insert("reactions", {
         replyId: args.replyId,
-        type: args.type,
+        type,
         fingerprint: args.fingerprint,
         createdAt: Date.now(),
       });
@@ -103,17 +118,10 @@ export const getCounts = query({
     fingerprint: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const counts = {
-      love: 0,
-      laugh: 0,
-      shock: 0,
-      sad: 0,
-    };
-
     if (!args.confessionId && !args.replyId) {
       return {
-        ...counts,
-        userReaction: null as "love" | "laugh" | "shock" | "sad" | null,
+        counts: {} as Record<string, number>,
+        userReaction: null as string | null,
       };
     }
 
@@ -129,17 +137,19 @@ export const getCounts = query({
           .withIndex("by_replyId", (q) => q.eq("replyId", args.replyId))
           .collect();
 
-    let userReaction: "love" | "laugh" | "shock" | "sad" | null = null;
+    const counts: Record<string, number> = {};
+    let userReaction: string | null = null;
 
     reactions.forEach((r) => {
-      counts[r.type]++;
+      const unified = normalizeReactionType(r.type);
+      counts[unified] = (counts[unified] || 0) + 1;
       if (args.fingerprint && r.fingerprint === args.fingerprint) {
-        userReaction = r.type;
+        userReaction = unified;
       }
     });
 
     return {
-      ...counts,
+      counts,
       userReaction,
     };
   },

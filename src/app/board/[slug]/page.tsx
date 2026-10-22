@@ -1,9 +1,10 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { getFingerprint } from "@/lib/fingerprint";
+import { addRecentBoardSlug } from "@/lib/recentBoards";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   FavouriteIcon,
@@ -15,6 +16,7 @@ import {
   ArrowLeft01Icon,
   SparklesIcon,
   Loading03Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -22,10 +24,22 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Doc } from "../../../../convex/_generated/dataModel";
 import { ReactionBar } from "@/components/ReactionBar";
+import { ExpiryCountdown } from "@/components/ExpiryCountdown";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { toast } from "sonner";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+type SortOption = "newest" | "popular" | "discussed";
+
+type ConfessionWithCounts = Doc<"confessions"> & {
+  reactionCount: number;
+  replyCount: number;
+};
+
+const SELF_DELETE_WINDOW_MS = 5 * 60 * 1000;
 
 export default function BoardPage({
   params,
@@ -36,7 +50,7 @@ export default function BoardPage({
   const board = useQuery(api.boards.getBySlug, { slug });
   const confessions = useQuery(
     api.confessions.list,
-    board ? { boardId: board._id } : "skip",
+    board ? { boardId: board._id } : "skip"
   );
   const createConfession = useMutation(api.confessions.create);
 
@@ -46,10 +60,18 @@ export default function BoardPage({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [fingerprint, setFingerprint] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   useEffect(() => {
     setFingerprint(getFingerprint());
   }, []);
+
+  // Save to recent boards in localStorage when a valid board is visited
+  useEffect(() => {
+    if (board?.slug) {
+      addRecentBoardSlug(board.slug);
+    }
+  }, [board?.slug]);
 
   // Apply theme to document
   useEffect(() => {
@@ -60,6 +82,22 @@ export default function BoardPage({
       document.documentElement.removeAttribute("data-theme");
     };
   }, [board?.theme]);
+
+  const sortedConfessions = useMemo(() => {
+    if (!confessions) return undefined;
+    const copy = [...confessions];
+    if (sortBy === "popular") {
+      return copy.sort(
+        (a, b) => b.reactionCount - a.reactionCount || b.createdAt - a.createdAt
+      );
+    }
+    if (sortBy === "discussed") {
+      return copy.sort(
+        (a, b) => b.replyCount - a.replyCount || b.createdAt - a.createdAt
+      );
+    }
+    return copy.sort((a, b) => b.createdAt - a.createdAt);
+  }, [confessions, sortBy]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -84,7 +122,7 @@ export default function BoardPage({
       setNickname("");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to post confession",
+        err instanceof Error ? err.message : "Failed to post message"
       );
     } finally {
       setIsSubmitting(false);
@@ -140,6 +178,8 @@ export default function BoardPage({
     );
   }
 
+  const allowReplies = board.allowReplies !== false;
+
   return (
     <div className="font-sans min-h-screen bg-background pb-24">
       <div className="max-w-3xl mx-auto px-4 pt-12">
@@ -161,15 +201,18 @@ export default function BoardPage({
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary text-white rounded-full text-xs font-black tracking-widest uppercase">
-                <HugeiconsIcon
-                  icon={SparklesIcon}
-                  size={12}
-                  color="currentColor"
-                  strokeWidth={2}
-                  className="w-3 h-3"
-                />{" "}
-                Private Board
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary text-white rounded-full text-xs font-black tracking-widest uppercase">
+                  <HugeiconsIcon
+                    icon={SparklesIcon}
+                    size={12}
+                    color="currentColor"
+                    strokeWidth={2}
+                    className="w-3 h-3"
+                  />{" "}
+                  Private Board
+                </div>
+                <ExpiryCountdown expiresAt={board.expiresAt} />
               </div>
               <h1 className="text-4xl font-serif md:text-5xl font-black text-text-primary tracking-tight leading-tight">
                 {board.name}
@@ -235,7 +278,7 @@ export default function BoardPage({
                       "text-xs font-black tracking-tighter transition-colors",
                       content.length > 280
                         ? "text-brand-primary"
-                        : "text-text-muted/50",
+                        : "text-text-muted/50"
                     )}
                   >
                     {content.length} / 300
@@ -290,18 +333,46 @@ export default function BoardPage({
         </section>
 
         <div className="space-y-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <h2 className="text-2xl font-serif font-black text-text-primary flex items-center gap-3">
               Recent Messages
               {confessions && (
-                <span className="bg-brand-primary text-white text-sm px-3 py-1 rounded-full font-black">
+                <span className="bg-brand-primary text-white text-sm px-3 py-1 rounded-full font-black font-sans">
                   {confessions.length}
                 </span>
               )}
             </h2>
+
+            {confessions && confessions.length > 1 && (
+              <div className="inline-flex items-center p-1 rounded-xl bg-surface border border-border-primary self-start sm:self-auto">
+                {(
+                  [
+                    { id: "newest", label: "Newest" },
+                    { id: "popular", label: "Most Reacted" },
+                    ...(allowReplies
+                      ? [{ id: "discussed", label: "Most Discussed" }]
+                      : []),
+                  ] as { id: SortOption; label: string }[]
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSortBy(tab.id)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-black transition-all",
+                      sortBy === tab.id
+                        ? "bg-brand-primary text-white shadow-sm"
+                        : "text-text-secondary hover:text-text-primary"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {!confessions ? (
+          {!sortedConfessions ? (
             <div className="flex flex-col items-center py-20 animate-pulse">
               <HugeiconsIcon
                 icon={Loading03Icon}
@@ -314,7 +385,7 @@ export default function BoardPage({
                 Loading Messages...
               </p>
             </div>
-          ) : confessions.length === 0 ? (
+          ) : sortedConfessions.length === 0 ? (
             <div className="text-center py-24 bg-surface rounded-[2.5rem] border-4 border-dashed border-border-primary">
               <div className="bg-surface-elevated w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-border-primary">
                 <HugeiconsIcon
@@ -334,13 +405,13 @@ export default function BoardPage({
             </div>
           ) : (
             <div className="grid gap-6">
-              {confessions.map((confession) => (
+              {sortedConfessions.map((confession) => (
                 <ConfessionCard
                   key={confession._id}
                   confession={confession}
                   fingerprint={fingerprint}
                   slug={slug}
-                  allowReplies={board.allowReplies !== false}
+                  allowReplies={allowReplies}
                 />
               ))}
             </div>
@@ -357,7 +428,7 @@ function ConfessionCard({
   slug,
   allowReplies,
 }: {
-  confession: Doc<"confessions">;
+  confession: ConfessionWithCounts;
   fingerprint: string;
   slug: string;
   allowReplies: boolean;
@@ -366,15 +437,44 @@ function ConfessionCard({
     confessionId: confession._id,
     fingerprint: fingerprint || undefined,
   });
-  const replyCount = useQuery(
-    api.replies.getCount,
-    allowReplies ? { confessionId: confession._id } : "skip"
-  );
   const toggleReaction = useMutation(api.reactions.toggle);
+  const removeConfession = useMutation(api.confessions.remove);
+
+  const [now, setNow] = useState(() => Date.now());
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isAuthor = Boolean(fingerprint && confession.fingerprint === fingerprint);
+  const canSelfDelete =
+    isAuthor && now - confession.createdAt <= SELF_DELETE_WINDOW_MS;
+
+  useEffect(() => {
+    if (!canSelfDelete) return;
+    const remaining = SELF_DELETE_WINDOW_MS - (Date.now() - confession.createdAt);
+    if (remaining <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), remaining + 100);
+    return () => clearTimeout(timer);
+  }, [canSelfDelete, confession.createdAt]);
 
   const handleReact = (unified: string) => {
     if (!fingerprint) return;
     toggleReaction({ confessionId: confession._id, type: unified, fingerprint });
+  };
+
+  const handleDelete = async () => {
+    if (!fingerprint || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await removeConfession({
+        confessionId: confession._id,
+        fingerprint,
+      });
+      toast.success("Message deleted");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete message"
+      );
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -389,21 +489,30 @@ function ConfessionCard({
           <span className="font-black text-text-primary tracking-tight">
             {confession.nickname || "Anonymous"}
           </span>
-          {fingerprint && confession.fingerprint === fingerprint && (
+          {isAuthor && (
             <span className="px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/30 text-[10px] font-black uppercase tracking-wider">
               You
             </span>
           )}
         </div>
-        <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-3 py-1 rounded-full border border-border-secondary">
-          <HugeiconsIcon
-            icon={Clock01Icon}
-            size={12}
-            color="currentColor"
-            strokeWidth={2}
-            className="w-3 h-3"
-          />
-          {formatDistanceToNow(confession.createdAt)} ago
+        <div className="flex items-center gap-2">
+          {canSelfDelete && (
+            <ConfirmDeleteButton
+              onConfirm={handleDelete}
+              isDeleting={isDeleting}
+              itemLabel="post"
+            />
+          )}
+          <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-3 py-1 rounded-full border border-border-secondary">
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              size={12}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-3 h-3"
+            />
+            {formatDistanceToNow(confession.createdAt)} ago
+          </div>
         </div>
       </div>
       <p className="text-text-primary text-xl leading-relaxed mb-8 font-medium whitespace-pre-wrap tracking-tight">
@@ -429,7 +538,8 @@ function ConfessionCard({
               className="w-4 h-4"
             />
             <span>
-              {replyCount ?? 0} {replyCount === 1 ? "Reply" : "Replies"}
+              {confession.replyCount}{" "}
+              {confession.replyCount === 1 ? "Reply" : "Replies"}
             </span>
           </Link>
         )}

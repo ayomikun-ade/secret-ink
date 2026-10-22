@@ -32,9 +32,9 @@ export const toggle = mutation({
 
     if (args.confessionId) {
       const confession = await ctx.db.get(args.confessionId);
-      if (!confession) throw new Error("Confession not found");
+      if (!confession) throw new Error("Post not found");
       if (confession.expiresAt && confession.expiresAt < Date.now()) {
-        throw new Error("Confession has expired");
+        throw new Error("Post has expired");
       }
 
       const existing = await ctx.db
@@ -77,7 +77,7 @@ export const toggle = mutation({
         !confession ||
         (confession.expiresAt && confession.expiresAt < Date.now())
       ) {
-        throw new Error("Parent confession has expired");
+        throw new Error("Parent post has expired");
       }
 
       const existing = await ctx.db

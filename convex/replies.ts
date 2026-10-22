@@ -29,9 +29,9 @@ export const create = mutation({
     }
 
     const confession = await ctx.db.get(args.confessionId);
-    if (!confession) throw new Error("Confession not found");
+    if (!confession) throw new Error("Post not found");
     if (confession.expiresAt && confession.expiresAt < Date.now()) {
-      throw new Error("Confession has expired");
+      throw new Error("Post has expired");
     }
 
     const board = await ctx.db.get(confession.boardId);
@@ -58,7 +58,10 @@ export const create = mutation({
 });
 
 export const listByConfession = query({
-  args: { confessionId: v.id("confessions") },
+  args: {
+    confessionId: v.id("confessions"),
+    fingerprint: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const confession = await ctx.db.get(args.confessionId);
     if (!confession) return [];
@@ -74,6 +77,7 @@ export const listByConfession = query({
     return replies.map(({ fingerprint, ...reply }) => ({
       ...reply,
       isAuthor: fingerprint === confession.fingerprint,
+      isViewer: Boolean(args.fingerprint && fingerprint === args.fingerprint),
     }));
   },
 });
@@ -89,5 +93,36 @@ export const getCount = query({
       .collect();
 
     return replies.length;
+  },
+});
+
+const SELF_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+export const remove = mutation({
+  args: {
+    replyId: v.id("replies"),
+    fingerprint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const reply = await ctx.db.get(args.replyId);
+    if (!reply) throw new Error("Reply not found");
+    if (reply.fingerprint !== args.fingerprint) {
+      throw new Error("You can only delete your own reply");
+    }
+    if (Date.now() - reply.createdAt > SELF_DELETE_WINDOW_MS) {
+      throw new Error("Delete window (5 minutes) has expired");
+    }
+
+    const reactions = await ctx.db
+      .query("reactions")
+      .withIndex("by_replyId", (q) => q.eq("replyId", reply._id))
+      .collect();
+
+    for (const r of reactions) {
+      await ctx.db.delete(r._id);
+    }
+
+    await ctx.db.delete(reply._id);
+    return { deleted: true };
   },
 });

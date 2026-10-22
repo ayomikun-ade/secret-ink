@@ -2,9 +2,11 @@
 
 import { use, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "../../../../../../convex/_generated/api";
 import { Id } from "../../../../../../convex/_generated/dataModel";
 import { getFingerprint } from "@/lib/fingerprint";
+import { addRecentBoardSlug } from "@/lib/recentBoards";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   FavouriteIcon,
@@ -14,16 +16,22 @@ import {
   ArrowLeft01Icon,
   SparklesIcon,
   Loading03Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ReactionBar } from "@/components/ReactionBar";
+import { ExpiryCountdown } from "@/components/ExpiryCountdown";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { toast } from "sonner";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const SELF_DELETE_WINDOW_MS = 5 * 60 * 1000;
 
 export default function ConfessionThreadPage({
   params,
@@ -32,6 +40,19 @@ export default function ConfessionThreadPage({
 }) {
   const { slug, confessionId } = use(params);
   const typedConfessionId = confessionId as Id<"confessions">;
+  const router = useRouter();
+
+  const [content, setContent] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingConfession, setIsDeletingConfession] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fingerprint, setFingerprint] = useState("");
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    setFingerprint(getFingerprint());
+  }, []);
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const confession = useQuery(api.confessions.getById, {
@@ -39,25 +60,23 @@ export default function ConfessionThreadPage({
   });
   const replies = useQuery(api.replies.listByConfession, {
     confessionId: typedConfessionId,
+    fingerprint: fingerprint || undefined,
   });
 
   const createReply = useMutation(api.replies.create);
   const toggleReaction = useMutation(api.reactions.toggle);
-
-  const [content, setContent] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fingerprint, setFingerprint] = useState("");
-
-  useEffect(() => {
-    setFingerprint(getFingerprint());
-  }, []);
+  const removeConfession = useMutation(api.confessions.remove);
 
   const confessionReactions = useQuery(api.reactions.getCounts, {
     confessionId: typedConfessionId,
     fingerprint: fingerprint || undefined,
   });
+
+  useEffect(() => {
+    if (board?.slug) {
+      addRecentBoardSlug(board.slug);
+    }
+  }, [board?.slug]);
 
   // Apply board theme to document
   useEffect(() => {
@@ -69,6 +88,24 @@ export default function ConfessionThreadPage({
     };
   }, [board?.theme]);
 
+  const isViewerOP = Boolean(
+    fingerprint && confession && confession.fingerprint === fingerprint
+  );
+  const canDeleteConfession = Boolean(
+    isViewerOP &&
+      confession &&
+      now - confession.createdAt <= SELF_DELETE_WINDOW_MS
+  );
+
+  useEffect(() => {
+    if (!canDeleteConfession || !confession) return;
+    const remaining =
+      SELF_DELETE_WINDOW_MS - (Date.now() - confession.createdAt);
+    if (remaining <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), remaining + 100);
+    return () => clearTimeout(timer);
+  }, [canDeleteConfession, confession]);
+
   const handleReactConfession = (unified: string) => {
     if (!fingerprint) return;
     toggleReaction({
@@ -76,6 +113,24 @@ export default function ConfessionThreadPage({
       type: unified,
       fingerprint,
     });
+  };
+
+  const handleDeleteConfession = async () => {
+    if (!fingerprint || isDeletingConfession) return;
+    setIsDeletingConfession(true);
+    try {
+      await removeConfession({
+        confessionId: typedConfessionId,
+        fingerprint,
+      });
+      toast.success("Message deleted");
+      router.push(`/board/${slug}`);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete message"
+      );
+      setIsDeletingConfession(false);
+    }
   };
 
   const handleSubmitReply = async (e: React.FormEvent) => {
@@ -127,10 +182,10 @@ export default function ConfessionThreadPage({
           />
         </div>
         <h1 className="text-3xl font-black text-text-primary mb-4">
-          Confession Not Found
+          Post Not Found
         </h1>
         <p className="text-text-secondary font-medium mb-8">
-          This confession or board has dissolved into the ink or never existed.
+          This post or board has dissolved into the ink or never existed.
         </p>
         <Link
           href={`/board/${slug}`}
@@ -150,7 +205,6 @@ export default function ConfessionThreadPage({
   }
 
   const allowReplies = board.allowReplies !== false;
-  const isViewerOP = Boolean(fingerprint && confession.fingerprint === fingerprint);
 
   return (
     <div className="font-sans min-h-screen bg-background pb-24">
@@ -172,7 +226,7 @@ export default function ConfessionThreadPage({
             Back to {board.name}
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary text-white rounded-full text-xs font-black tracking-widest uppercase">
               <HugeiconsIcon
                 icon={SparklesIcon}
@@ -181,8 +235,9 @@ export default function ConfessionThreadPage({
                 strokeWidth={2}
                 className="w-3 h-3"
               />{" "}
-              Confession Thread
+              Post Thread
             </div>
+            <ExpiryCountdown expiresAt={board.expiresAt} />
           </div>
         </header>
 
@@ -210,15 +265,24 @@ export default function ConfessionThreadPage({
                   )}
                 </div>
               </div>
-              <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-3 py-1 rounded-full border border-border-secondary">
-                <HugeiconsIcon
-                  icon={Clock01Icon}
-                  size={12}
-                  color="currentColor"
-                  strokeWidth={2}
-                  className="w-3 h-3"
-                />
-                {formatDistanceToNow(confession.createdAt)} ago
+              <div className="flex items-center gap-2">
+                {canDeleteConfession && (
+                  <ConfirmDeleteButton
+                    onConfirm={handleDeleteConfession}
+                    isDeleting={isDeletingConfession}
+                    itemLabel="post"
+                  />
+                )}
+                <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-3 py-1 rounded-full border border-border-secondary">
+                  <HugeiconsIcon
+                    icon={Clock01Icon}
+                    size={12}
+                    color="currentColor"
+                    strokeWidth={2}
+                    className="w-3 h-3"
+                  />
+                  {formatDistanceToNow(confession.createdAt)} ago
+                </div>
               </div>
             </div>
 
@@ -334,7 +398,7 @@ export default function ConfessionThreadPage({
             <h3 className="text-xl font-serif font-black text-text-primary flex items-center gap-3">
               Replies
               {replies && (
-                <span className="bg-brand-primary text-white text-xs px-3 py-1 rounded-full font-black">
+                <span className="bg-brand-primary text-white text-xs px-3 py-1 rounded-full font-black font-sans">
                   {replies.length}
                 </span>
               )}
@@ -362,7 +426,7 @@ export default function ConfessionThreadPage({
               <p className="text-text-secondary text-sm font-medium">
                 {allowReplies
                   ? "Start the conversation by posting a reply above."
-                  : "This confession has no replies."}
+                  : "This post has no replies."}
               </p>
             </div>
           ) : (
@@ -394,6 +458,7 @@ function ReplyCard({
     nickname?: string;
     createdAt: number;
     isAuthor: boolean;
+    isViewer: boolean;
   };
   fingerprint: string;
 }) {
@@ -402,10 +467,42 @@ function ReplyCard({
     fingerprint: fingerprint || undefined,
   });
   const toggleReaction = useMutation(api.reactions.toggle);
+  const removeReply = useMutation(api.replies.remove);
+
+  const [now, setNow] = useState(() => Date.now());
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const canSelfDelete =
+    reply.isViewer && now - reply.createdAt <= SELF_DELETE_WINDOW_MS;
+
+  useEffect(() => {
+    if (!canSelfDelete) return;
+    const remaining = SELF_DELETE_WINDOW_MS - (Date.now() - reply.createdAt);
+    if (remaining <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), remaining + 100);
+    return () => clearTimeout(timer);
+  }, [canSelfDelete, reply.createdAt]);
 
   const handleReact = (unified: string) => {
     if (!fingerprint) return;
     toggleReaction({ replyId: reply._id, type: unified, fingerprint });
+  };
+
+  const handleDelete = async () => {
+    if (!fingerprint || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await removeReply({
+        replyId: reply._id,
+        fingerprint,
+      });
+      toast.success("Reply deleted");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete reply"
+      );
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -432,16 +529,31 @@ function ReplyCard({
               OP
             </span>
           )}
+          {reply.isViewer && (
+            <span className="px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/30 text-[10px] font-black uppercase tracking-wider">
+              You
+            </span>
+          )}
         </div>
-        <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-2.5 py-1 rounded-full border border-border-secondary">
-          <HugeiconsIcon
-            icon={Clock01Icon}
-            size={11}
-            color="currentColor"
-            strokeWidth={2}
-            className="w-3 h-3"
-          />
-          {formatDistanceToNow(reply.createdAt)} ago
+        <div className="flex items-center gap-2">
+          {canSelfDelete && (
+            <ConfirmDeleteButton
+              onConfirm={handleDelete}
+              isDeleting={isDeleting}
+              itemLabel="reply"
+              compact
+            />
+          )}
+          <div className="flex max-md:w-fit font-mono items-center gap-1.5 text-text-secondary font-bold text-[10px] uppercase tracking-widest bg-surface-elevated px-2.5 py-1 rounded-full border border-border-secondary">
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              size={11}
+              color="currentColor"
+              strokeWidth={2}
+              className="w-3 h-3"
+            />
+            {formatDistanceToNow(reply.createdAt)} ago
+          </div>
         </div>
       </div>
 

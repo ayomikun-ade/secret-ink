@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CommentAdd01Icon,
   SparklesIcon,
   ArrowRight01Icon,
   Loading03Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import { ThemeSelector, type Theme } from "@/components/ThemeSelector";
 import { DateTimePicker } from "@/components/DateTimePicker";
+import { ExpiryCountdown } from "@/components/ExpiryCountdown";
+import {
+  getRecentBoardSlugs,
+  addRecentBoardSlug,
+  removeRecentBoardSlug,
+} from "@/lib/recentBoards";
 import { toast } from "sonner";
 
 export default function Home() {
@@ -22,12 +30,28 @@ export default function Home() {
   const [theme, setTheme] = useState<Theme>("teal");
   const [allowReplies, setAllowReplies] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const createBoard = useMutation(api.boards.create);
   const router = useRouter();
+
+  useEffect(() => {
+    setRecentSlugs(getRecentBoardSlugs());
+  }, []);
+
+  const recentBoards = useQuery(
+    api.boards.getBySlugs,
+    recentSlugs.length > 0 ? { slugs: recentSlugs } : "skip"
+  );
 
   // Calculate min and max expiry times
   const minExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
   const maxExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days from now
+
+  const handleRemoveRecent = (e: React.MouseEvent, slugToRemove: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRecentSlugs(removeRecentBoardSlug(slugToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +67,7 @@ export default function Home() {
         theme,
         allowReplies,
       });
+      addRecentBoardSlug(slug);
       toast.success("Board created successfully!", {
         description: `Redirecting to your board...`,
       });
@@ -205,12 +230,12 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-text-primary text-sm">
-                        Allow Replies on Confessions
+                        Allow Replies on Posts
                       </div>
                       <div className="text-xs text-text-secondary">
                         {allowReplies
-                          ? "Participants can open a thread and reply to confessions"
-                          : "Confessions are read-only with reactions (no replies)"}
+                          ? "Participants can open a thread and reply to posts"
+                          : "Posts are read-only with reactions (no replies)"}
                       </div>
                     </div>
                   </div>
@@ -262,6 +287,69 @@ export default function Home() {
             </form>
           </div>
         </div>
+
+        {recentBoards && recentBoards.length > 0 && (
+          <section className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-serif font-bold text-text-primary flex items-center gap-2.5">
+                Recent Spaces
+                <span className="bg-brand-primary/15 text-brand-primary border border-brand-primary/30 text-xs px-2.5 py-0.5 rounded-full font-sans font-black">
+                  {recentBoards.length}
+                </span>
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {recentBoards.map((board) => (
+                <Link
+                  key={board._id}
+                  href={`/board/${board.slug}`}
+                  className="group relative flex flex-col justify-between p-6 rounded-xl bg-surface border-3 border-border-primary hover:border-brand-primary transition-all duration-200 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-0.5"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h3 className="font-serif font-black text-xl text-text-primary group-hover:text-brand-primary transition-colors line-clamp-1">
+                        {board.name}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveRecent(e, board.slug)}
+                        aria-label="Remove from recent spaces"
+                        title="Remove from recent spaces"
+                        className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-elevated transition-colors"
+                      >
+                        <HugeiconsIcon
+                          icon={Cancel01Icon}
+                          size={14}
+                          color="currentColor"
+                          strokeWidth={2}
+                          className="w-3.5 h-3.5"
+                        />
+                      </button>
+                    </div>
+                    {board.description && (
+                      <p className="text-text-secondary text-sm line-clamp-2 mb-4 font-medium">
+                        {board.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-border-primary/60 mt-2">
+                    <ExpiryCountdown expiresAt={board.expiresAt} />
+                    <span className="inline-flex items-center gap-1 text-xs font-black text-brand-primary group-hover:translate-x-0.5 transition-transform">
+                      Open Space
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        size={14}
+                        color="currentColor"
+                        strokeWidth={2}
+                        className="w-3.5 h-3.5"
+                      />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10">
           {[

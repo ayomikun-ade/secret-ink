@@ -72,3 +72,25 @@ export const getBySlug = query({
     return publicBoard;
   },
 });
+
+export const getBySlugs = query({
+  args: { slugs: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const results = [];
+
+    for (const slug of args.slugs) {
+      const board = await ctx.db
+        .query("boards")
+        .withIndex("by_slug", (q) => q.eq("slug", slug))
+        .unique();
+
+      if (board && (!board.expiresAt || board.expiresAt > now)) {
+        const { ownerToken: _, ...publicBoard } = board;
+        results.push(publicBoard);
+      }
+    }
+
+    return results;
+  },
+});

@@ -41,13 +41,11 @@ export function ReactionBar({
   const [showAll, setShowAll] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const defaultSet = new Set(DEFAULT_REACTIONS);
-  const hasCustomReaction = Object.entries(counts).some(
-    ([unified, count]) => !defaultSet.has(unified) && count > 0
-  );
+  const hasAnyReaction = Object.values(counts).some((count) => count > 0);
 
-  // If a custom emoji exists, remove the un-reacted standard ones so they don't take up space
-  const allReactions = hasCustomReaction
+  // Show the 4 standard quick-react emojis only when there are no reactions yet;
+  // once any reaction exists, only display the reacted emojis.
+  const allReactions = hasAnyReaction
     ? Object.entries(counts)
         .filter(([, count]) => count > 0)
         .sort((a, b) => b[1] - a[1])

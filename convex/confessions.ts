@@ -33,18 +33,13 @@ export const create = mutation({
       throw new Error("Board has expired");
     }
 
-    const eightHoursFromNow = Date.now() + 8 * 60 * 60 * 1000;
-    const expiresAt = board.expiresAt 
-      ? Math.min(board.expiresAt, eightHoursFromNow)
-      : eightHoursFromNow;
-
     const confessionId = await ctx.db.insert("confessions", {
       boardId: args.boardId,
       content: args.content,
       nickname: args.nickname,
       fingerprint: args.fingerprint,
       createdAt: Date.now(),
-      expiresAt: expiresAt,
+      expiresAt: board.expiresAt,
     });
 
     return confessionId;
